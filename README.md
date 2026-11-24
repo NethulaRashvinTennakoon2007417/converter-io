@@ -4,7 +4,7 @@ Free, ad-free converter that runs entirely in the browser. Static site, no build
 
 Dashboard with search, category filters, pinned tools, drop-a-file-to-find-the-right-tool, usage stats and recent activity (stored in the browser only).
 
-Tools: merge, split, rotate, compress, images to PDF, PDF to images, OCR (English/Sinhala/Tamil), Word to PDF/HTML.
+Tools: merge, split, rotate, compress, images to PDF, PDF to images, OCR (English/Sinhala/Tamil), Word to PDF (no print dialog).
 
 ## Deploy
 1. Push this folder to a GitHub repo.
