@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>converter.io</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;700&display=swap">
+<style>
+:root{--bg:#eef1f4;--panel:#fff;--ink:#14202b;--mute:#5d6b78;--line:#d3dae1;--acc:#0f6e8c;--acc-ink:#fff;--ok:#1d7a4d;--err:#b3261e}
+@media (prefers-color-scheme:dark){:root{--bg:#10171d;--panel:#18222a;--ink:#e6edf2;--mute:#93a3b0;--line:#2a3945;--acc:#4fb3d1;--acc-ink:#07202a;--ok:#5fcf97;--err:#ff8a80}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Hanken Grotesk",system-ui,sans-serif}
+.app{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+nav{border-right:1px solid var(--line);padding:24px 16px;background:var(--panel)}
+nav h1{font-size:20px;margin:0 8px 4px}
+nav p{margin:0 8px 20px;color:var(--mute);font-size:14px}
+nav button{display:block;width:100%;text-align:left;border:0;background:none;color:var(--ink);padding:10px 12px;border-radius:8px;font:inherit;cursor:pointer}
+nav button:hover{background:var(--bg)}
+nav button[aria-current=true]{background:var(--acc);color:var(--acc-ink);font-weight:700}
+nav small{display:block;font-weight:400;opacity:.8;font-size:13px}
+main{padding:32px;max-width:820px;width:100%}
+h2{font-size:28px;margin:0 0 4px}
+.desc{color:var(--mute);margin:0 0 20px}
+.drop{border:2px dashed var(--line);border-radius:12px;background:var(--panel);padding:36px 20px;text-align:center;cursor:pointer}
+.drop.over,.drop:hover{border-color:var(--acc)}
+.drop b{color:var(--acc)}
+ul.files{list-style:none;padding:0;margin:16px 0}
+ul.files li{display:flex;gap:8px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin-bottom:6px}
+ul.files span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ul.files button{border:0;background:none;color:var(--mute);cursor:pointer;font-size:16px;padding:2px 6px}
+.opt{margin:16px 0;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.opt input,.opt select{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
+.go{background:var(--acc);color:var(--acc-ink);border:0;border-radius:8px;padding:12px 22px;font:inherit;font-weight:700;cursor:pointer}
+.go:disabled{opacity:.5;cursor:default}
+.bar{height:6px;background:var(--line);border-radius:3px;margin-top:16px;overflow:hidden;display:none}
+.bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .2s}
+#msg{margin-top:12px;min-height:24px}
+#msg.ok{color:var(--ok)}#msg.err{color:var(--err)}
+textarea{width:100%;height:220px;margin-top:12px;padding:12px;font:14px/1.5 ui-monospace,monospace;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);display:none}
+.note{font-size:14px;color:var(--mute);margin-top:24px;border-top:1px solid var(--line);padding-top:12px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 20px}
+.stats div{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;color:var(--mute);font-size:14px}
+.stats b{display:block;font-size:26px;color:var(--ink)}
+.bar2{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.bar2 input{flex:1;min-width:180px;font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
+.chip{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:20px;padding:6px 14px;font:inherit;font-size:14px;cursor:pointer;margin-right:6px}
+.chip[aria-pressed=true]{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;cursor:pointer;transition:transform .15s,border-color .15s}
+.card:hover{border-color:var(--acc);transform:translateY(-2px)}
+.card h3{margin:0 0 4px;font-size:17px;padding-right:28px}
+.card p{margin:0 0 10px;color:var(--mute);font-size:14px}
+.card small{color:var(--mute);font-size:13px}
+.card.fit{border-color:var(--ok);box-shadow:0 0 0 2px var(--ok)}
+.card.dim{opacity:.4}
+.star{position:absolute;top:10px;right:10px;border:0;background:none;color:var(--acc);font-size:20px;cursor:pointer}
+.pend{background:var(--panel);border:1px solid var(--ok);border-radius:8px;padding:10px 12px;margin-bottom:16px;font-size:14px}
+.rh{margin:28px 0 8px;font-size:18px}
+.lnk{border:0;background:none;color:var(--acc);cursor:pointer;font:inherit;padding:0}
+ul.files small{color:var(--mute);white-space:nowrap}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+@media(max-width:700px){.app{grid-template-columns:1fr}nav{border-right:0;border-bottom:1px solid var(--line)}main{padding:20px}}
+</style>
+</head>
+<body>
+<div class="app">
+<nav><h1>converter.io</h1><p>Free. No ads. Files never leave your browser.</p><button id="homeBtn" data-id="home">Dashboard<small>Pinned tools and recent work</small></button><div id="menu"></div></nav>
+<main>
+<section id="dash"></section>
+<section id="work" hidden>
+<h2 id="title"></h2><p class="desc" id="desc"></p>
+<div class="drop" id="drop" tabindex="0" role="button"><b>Choose files</b> or drop them here<input type="file" id="pick" hidden></div>
+<ul class="files" id="list"></ul>
+<div class="opt" id="opts"></div>
+<button class="go" id="go">Convert</button>
+<div class="bar" id="bar"><i></i></div>
+<div id="msg" role="status"></div>
+<textarea id="out" readonly></textarea>
+<p class="note">Everything runs on your own device. Scanned-PDF OCR downloads a language file the first time (about 10 MB).</p>
+</section>
+</main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.5/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+const $=id=>document.getElementById(id);
+const {PDFDocument,degrees}=PDFLib;
+let files=[],tool=null;
+
+let lastOut=0;const dl=(data,name,type)=>{const b=data instanceof Blob?data:new Blob([data],{type});lastOut=b.size;const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000)};
+const buf=f=>f.arrayBuffer();
+const base=f=>f.name.replace(/\.[^.]+$/,"");
+const prog=p=>{$("bar").style.display="block";$("bar").firstElementChild.style.width=(p*100)+"%"};
+const say=(t,c="")=>{$("msg").textContent=t;$("msg").className=c};
+const isPdf=f=>f.type==="application/pdf"||/\.pdf$/i.test(f.name);
+
+async function renderPages(file,scale,cb){
+  const pdf=await pdfjsLib.getDocument({data:await buf(file)}).promise;
+  for(let i=1;i<=pdf.numPages;i++){
+    const page=await pdf.getPage(i),vp=page.getViewport({scale});
+    const c=document.createElement("canvas");c.width=vp.width;c.height=vp.height;
+    await page.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;
+    await cb(c,i,pdf.numPages,page.getViewport({scale:1}));
+    prog(i/pdf.numPages);
+  }
+}
+const toBlob=(c,type,q)=>new Promise(r=>c.toBlob(r,type,q));
+
+function ranges(txt,n){
+  const out=[];
+  txt.split(",").forEach(p=>{p=p.trim();if(!p)return;
+    const [a,b]=p.split("-").map(Number),s=a,e=b||a;
+    if(!(s>=1&&e<=n&&s<=e))throw new Error(`Page range "${p}" is outside 1-${n}.`);
+    for(let i=s;i<=e;i++)out.push(i-1)});
+  if(!out.length)throw new Error("Enter pages like 1-3,5.");
+  return out;
+}
+
+const TOOLS=[
+{id:"merge",name:"Merge PDFs",sub:"Combine files in order",desc:"Add two or more PDFs. They are joined in the order listed.",accept:".pdf",multi:true,
+ async run(){
+  if(files.length<2)throw new Error("Add at least two PDFs.");
+  const out=await PDFDocument.create();
+  for(const f of files){const d=await PDFDocument.load(await buf(f));(await out.copyPages(d,d.getPageIndices())).forEach(p=>out.addPage(p))}
+  dl(new Blob([await out.save()],{type:"application/pdf"}),"merged.pdf");return "Merged PDF downloaded."}},
+{id:"split",name:"Split / extract pages",sub:"Keep only the pages you pick",desc:"Choose the pages to keep, for example 1-3,5.",accept:".pdf",opts:[{k:"range",type:"text",ph:"1-3,5",label:"Pages"}],
+ async run(o){
+  const d=await PDFDocument.load(await buf(files[0])),idx=ranges(o.range,d.getPageCount());
+  const out=await PDFDocument.create();(await out.copyPages(d,idx)).forEach(p=>out.addPage(p));
+  dl(new Blob([await out.save()],{type:"application/pdf"}),base(files[0])+"-pages.pdf");return `Extracted ${idx.length} page(s).`}},
+{id:"rotate",name:"Rotate PDF",sub:"Turn every page",desc:"Rotate all pages of a PDF.",accept:".pdf",opts:[{k:"deg",type:"select",label:"Rotate",choices:[["90","90° clockwise"],["180","180°"],["270","90° counter-clockwise"]]}],
+ async run(o){
+  const d=await PDFDocument.load(await buf(files[0]));
+  d.getPages().forEach(p=>p.setRotation(degrees((p.getRotation().angle+Number(o.deg))%360)));
+  dl(new Blob([await d.save()],{type:"application/pdf"}),base(files[0])+"-rotated.pdf");return "Rotated PDF downloaded."}},
+{id:"img2pdf",name:"Images to PDF",sub:"JPG, PNG, WebP",desc:"Turn photos or scans into one PDF, one image per page.",accept:"image/*",multi:true,
+ async run(){
+  const out=await PDFDocument.create();
+  for(let i=0;i<files.length;i++){const f=files[i];let img;
+    if(/jpe?g/i.test(f.type))img=await out.embedJpg(await buf(f));
+    else if(/png/i.test(f.type))img=await out.embedPng(await buf(f));
+    else{const bm=await createImageBitmap(f),c=document.createElement("canvas");c.width=bm.width;c.height=bm.height;c.getContext("2d").drawImage(bm,0,0);img=await out.embedPng(await (await toBlob(c,"image/png")).arrayBuffer())}
+    out.addPage([img.width,img.height]).drawImage(img,{x:0,y:0,width:img.width,height:img.height});prog((i+1)/files.length)}
+  dl(new Blob([await out.save()],{type:"application/pdf"}),"images.pdf");return "PDF downloaded."}},
+{id:"pdf2img",name:"PDF to images",sub:"One PNG per page, zipped",desc:"Save every page of a PDF as a PNG image.",accept:".pdf",
+ async run(){
+  const zip=new JSZip();
+  await renderPages(files[0],2,async(c,i)=>zip.file(`page-${i}.png`,await toBlob(c,"image/png")));
+  dl(await zip.generateAsync({type:"blob"}),base(files[0])+"-images.zip");return "ZIP downloaded."}},
+{id:"compress",name:"Compress PDF",sub:"Smaller file, flattened pages",desc:"Rebuilds the PDF from page images to cut the size. Text will no longer be selectable, so keep your original.",accept:".pdf",opts:[{k:"q",type:"select",label:"Quality",choices:[["0.5|1.2","Small"],["0.7|1.5","Balanced"],["0.85|2","High"]],def:1}],
+ async run(o){
+  const [q,s]=o.q.split("|").map(Number),out=await PDFDocument.create();
+  await renderPages(files[0],s,async(c,i,n,vp)=>{
+    const img=await out.embedJpg(await (await toBlob(c,"image/jpeg",q)).arrayBuffer());
+    out.addPage([vp.width,vp.height]).drawImage(img,{x:0,y:0,width:vp.width,height:vp.height})});
+  const bytes=await out.save();
+  dl(new Blob([bytes],{type:"application/pdf"}),base(files[0])+"-small.pdf");
+  return `Done. ${(files[0].size/1048576).toFixed(2)} MB → ${(bytes.length/1048576).toFixed(2)} MB.`}},
+{id:"ocr",name:"OCR (scan to text)",sub:"Images or scanned PDFs",desc:"Read the text from scans and photos. Results appear below and download as a .txt file.",accept:".pdf,image/*",opts:[{k:"lang",type:"select",label:"Language",choices:[["eng","English"],["sin","Sinhala"],["tam","Tamil"],["eng+sin","English + Sinhala"]]}],
+ async run(o){
+  const worker=await Tesseract.createWorker(o.lang,1,{logger:m=>{if(m.status==="recognizing text")say(`Reading text… ${Math.round(m.progress*100)}%`)}});
+  let text="";
+  try{
+    if(isPdf(files[0]))await renderPages(files[0],2,async(c,i,n)=>{text+=`--- Page ${i} ---\n`+(await worker.recognize(c)).data.text+"\n"});
+    else text=(await worker.recognize(files[0])).data.text;
+  }finally{await worker.terminate()}
+  $("out").style.display="block";$("out").value=text;
+  dl(text,base(files[0])+".txt","text/plain");return "Text extracted and downloaded."}},
+{id:"word",name:"Word to PDF / HTML",sub:".docx files",desc:"Opens your Word file as a web page. Use Print → Save as PDF for the PDF. Simple layouts convert well; complex tables and headers may shift.",accept:".docx",
+ async run(){
+  const r=await mammoth.convertToHtml({arrayBuffer:await buf(files[0])});
+  const html=`<!DOCTYPE html><meta charset="utf-8"><title>${base(files[0])}</title><style>body{font:12pt/1.5 Georgia,serif;max-width:800px;margin:2em auto;padding:0 1em}table{border-collapse:collapse}td,th{border:1px solid #888;padding:4px 8px}img{max-width:100%}</style>${r.value}`;
+  const w=window.open("","_blank");
+  if(w){w.document.write(html+"<script>onload=()=>setTimeout(print,400)<\/script>");w.document.close();return "Print window opened. Choose Save as PDF as the destination."}
+  dl(html,base(files[0])+".html","text/html");return "Pop-ups are blocked, so an HTML file was downloaded instead. Open it and print to PDF."}},
+];
+
+function show(id){
+  tool=TOOLS.find(t=>t.id===id);files=[];$("dash").hidden=true;$("work").hidden=false;
+  $("title").textContent=tool.name;$("desc").textContent=tool.desc;
+  $("pick").accept=tool.accept;$("pick").multiple=!!tool.multi;
+  $("opts").innerHTML="";
+  (tool.opts||[]).forEach(o=>{
+    const l=document.createElement("label");l.textContent=o.label+" ";
+    const e=document.createElement(o.type==="select"?"select":"input");e.id="o_"+o.k;
+    if(o.type==="select"){o.choices.forEach(([v,t])=>e.add(new Option(t,v)));if(o.def)e.selectedIndex=o.def}else e.placeholder=o.ph;
+    l.appendChild(e);$("opts").appendChild(l)});
+  $("out").style.display="none";$("bar").style.display="none";say("");
+  document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-current",b.dataset.id===id));
+  renderList();
+}
+function renderList(){
+  $("list").innerHTML="";
+  files.forEach((f,i)=>{const li=document.createElement("li");
+    li.innerHTML=`<span></span><button title="Move up">↑</button><button title="Remove">✕</button>`;
+    li.firstChild.textContent=f.name;
+    li.children[1].onclick=()=>{if(i>0){[files[i-1],files[i]]=[files[i],files[i-1]];renderList()}};
+    li.children[2].onclick=()=>{files.splice(i,1);renderList()};
+    $("list").appendChild(li)});
+  $("go").disabled=!files.length;
+}
+function addFiles(fl){
+  fl=[...fl];if(!tool.multi)fl=fl.slice(0,1);
+  files=tool.multi?files.concat(fl):fl;renderList();say("");
+}
+const menu=$("menu");
+TOOLS.forEach(t=>{const b=document.createElement("button");b.dataset.id=t.id;b.innerHTML=`${t.name}<small>${t.sub}</small>`;b.onclick=()=>show(t.id);menu.appendChild(b)});
+$("drop").onclick=()=>$("pick").click();
+$("drop").onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();$("pick").click()}};
+$("pick").onchange=e=>{addFiles(e.target.files);e.target.value=""};
+$("drop").ondragover=e=>{e.preventDefault();$("drop").classList.add("over")};
+$("drop").ondragleave=()=>$("drop").classList.remove("over");
+$("drop").ondrop=e=>{e.preventDefault();$("drop").classList.remove("over");addFiles(e.dataTransfer.files)};
+$("go").onclick=async()=>{
+  const o={};(tool.opts||[]).forEach(x=>o[x.k]=$("o_"+x.k).value);
+  $("go").disabled=true;say("Working…");prog(0);
+  try{lastOut=0;const m=await tool.run(o);say(m,"ok");rec(tool,files,lastOut)}
+  catch(e){console.error(e);say(e.message||"Something went wrong. Check that the file is valid and not password-protected.","err")}
+  $("go").disabled=!files.length;
+};
+
+/* ---------- Dashboard ---------- */
+const CAT={merge:"PDF",split:"PDF",rotate:"PDF",compress:"PDF",img2pdf:"Images",pdf2img:"Images",ocr:"Text & Word",word:"Text & Word"};
+let S={hist:[],fav:[],tot:{runs:0,files:0,saved:0}},pending=[],catF="All",q="";
+try{S=Object.assign(S,JSON.parse(localStorage.getItem("oc")||"{}"))}catch(e){}
+const save=()=>{try{localStorage.setItem("oc",JSON.stringify(S))}catch(e){}};
+const esc=x=>String(x).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=b=>b>1048576?(b/1048576).toFixed(1)+" MB":Math.round(b/1024)+" KB";
+const ago=t=>{const m=Math.round((Date.now()-t)/60000);return m<1?"just now":m<60?m+" min ago":m<1440?Math.round(m/60)+" h ago":Math.round(m/1440)+" d ago"};
+const fits=(t,f)=>t.accept.split(",").some(a=>a.endsWith("/*")?f.type.startsWith(a.slice(0,-1)):f.name.toLowerCase().endsWith(a));
+function rec(t,fl,out){
+  const inB=fl.reduce((a,f)=>a+f.size,0);
+  S.tot.runs++;S.tot.files+=fl.length;
+  if(t.id==="compress"&&out&&out<inB)S.tot.saved+=inB-out;
+  S.hist.unshift({id:t.id,names:fl.map(f=>f.name),inB,out:t.id==="compress"?out:0,t:Date.now()});
+  S.hist=S.hist.slice(0,8);save();
+}
+function home(){
+  tool=null;files=[];$("work").hidden=true;$("dash").hidden=false;
+  document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-current",b.dataset.id==="home"));
+  renderDash();
+}
+function renderDash(){
+  const cats=["All",...new Set(Object.values(CAT))],fit=t=>pending.every(f=>fits(t,f));
+  const list=TOOLS.filter(t=>(catF==="All"||CAT[t.id]===catF)&&(t.name+" "+t.sub).toLowerCase().includes(q.toLowerCase()))
+    .sort((a,b)=>S.fav.includes(b.id)-S.fav.includes(a.id));
+  $("dash").innerHTML=`<h2>What do you need to convert?</h2>
+<p class="desc">Drop files anywhere on this page and the tools that fit will light up.</p>
+<div class="stats"><div><b>${S.tot.runs}</b>conversions</div><div><b>${S.tot.files}</b>files processed</div><div><b>${fmt(S.tot.saved)}</b>saved by compressing</div></div>
+<div class="bar2"><input id="q" type="search" placeholder="Search tools (press /)" value="${esc(q)}"><div>${cats.map(c=>`<button class="chip" data-c="${esc(c)}" aria-pressed="${c===catF}">${esc(c)}</button>`).join("")}</div></div>
+${pending.length?`<div class="pend">${pending.length} file(s) ready: ${esc(pending.map(f=>f.name).join(", "))}. Pick a tool. <button class="lnk" id="clr">Clear</button></div>`:""}
+<div class="grid">${list.map(t=>`<div class="card${pending.length?(fit(t)?" fit":" dim"):""}" data-t="${t.id}" tabindex="0" role="button"><button class="star" data-s="${t.id}" aria-label="Pin ${esc(t.name)}" aria-pressed="${S.fav.includes(t.id)}">${S.fav.includes(t.id)?"★":"☆"}</button><h3>${esc(t.name)}</h3><p>${esc(t.sub)}</p><small>${CAT[t.id]}</small></div>`).join("")||"<p>No tool matches that search.</p>"}</div>
+<h3 class="rh">Recent activity</h3>
+${S.hist.length?`<ul class="files">${S.hist.map(h=>`<li><span>${esc(TOOLS.find(t=>t.id===h.id).name)}: ${esc(h.names.join(", "))}</span><small>${h.out?fmt(h.inB)+" → "+fmt(h.out)+" · ":""}${ago(h.t)}</small></li>`).join("")}</ul><button class="lnk" id="clh">Clear history</button>`:`<p class="desc">Nothing yet. Finished conversions will be listed here. History and pins are stored only in this browser.</p>`}`;
+}
+function launch(id){
+  const p=pending;pending=[];show(id);
+  const ok=p.filter(f=>fits(tool,f));if(ok.length)addFiles(ok);
+}
+$("homeBtn").onclick=home;
+$("dash").onclick=e=>{
+  const s=e.target.closest("[data-s]");
+  if(s){const id=s.dataset.s;S.fav=S.fav.includes(id)?S.fav.filter(x=>x!==id):[...S.fav,id];save();return renderDash()}
+  const c=e.target.closest("[data-c]");if(c){catF=c.dataset.c;return renderDash()}
+  if(e.target.closest("#clr")){pending=[];return renderDash()}
+  if(e.target.closest("#clh")){S.hist=[];save();return renderDash()}
+  const k=e.target.closest("[data-t]");if(k)launch(k.dataset.t);
+};
+$("dash").onkeydown=e=>{if(e.key==="Enter"&&e.target.dataset.t)launch(e.target.dataset.t)};
+$("dash").oninput=e=>{if(e.target.id==="q"){q=e.target.value;renderDash();const i=$("q");i.focus();i.setSelectionRange(q.length,q.length)}};
+addEventListener("dragover",e=>{if(!$("dash").hidden)e.preventDefault()});
+addEventListener("drop",e=>{if(!$("dash").hidden){e.preventDefault();pending=[...e.dataTransfer.files];renderDash()}});
+addEventListener("keydown",e=>{if(e.key==="/"&&!$("dash").hidden&&document.activeElement.tagName!=="INPUT"){e.preventDefault();$("q").focus()}});
+home();
+</script>
+</body>
+</html>
