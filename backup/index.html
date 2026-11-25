@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>converter.io</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23000'/%3E%3Cpath d='M9 16h14M17 10l6 6-6 6' stroke='%23fff' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+
+<style>
+:root{--txt:#1d1d1f;--mute:#6e6e73;--glass:rgba(255,255,255,.55);--glass2:rgba(255,255,255,.4);--field:rgba(255,255,255,.7);--edge:rgba(255,255,255,.95);--edge2:rgba(0,0,0,.07);--shadow:rgba(0,0,0,.12);--acc:#000;--acc-ink:#fff;--ok:#1d1d1f;--err:#d70015;--base:#ececf0;--b1:#fff;--b2:#d4d4da;--b3:#e6e6eb;--b4:#c9c9d1;--ease:cubic-bezier(.32,.72,0,1);--spring:cubic-bezier(.34,1.56,.64,1);--font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,sans-serif;--font-d:-apple-system,BlinkMacSystemFont,"SF Pro Display","Inter",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root{--txt:#f5f5f7;--mute:#98989d;--glass:rgba(255,255,255,.08);--glass2:rgba(255,255,255,.05);--field:rgba(255,255,255,.07);--edge:rgba(255,255,255,.22);--edge2:rgba(255,255,255,.09);--shadow:rgba(0,0,0,.6);--acc:#fff;--acc-ink:#000;--ok:#f5f5f7;--err:#ff453a;--base:#000;--b1:#2a2a2e;--b2:#38383d;--b3:#1c1c1f;--b4:#303034}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--base);color:var(--txt);font:16px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,sans-serif}
+body::before{content:"";position:fixed;inset:-20%;z-index:-1;background:radial-gradient(40% 40% at 20% 25%,var(--b1),transparent 70%),radial-gradient(35% 35% at 80% 20%,var(--b2),transparent 70%),radial-gradient(45% 45% at 70% 85%,var(--b3),transparent 70%),radial-gradient(35% 35% at 15% 85%,var(--b4),transparent 70%);filter:blur(24px);animation:drift 40s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate3d(3%,-3%,0) rotate(6deg) scale(1.08)}}
+@media (prefers-reduced-motion:reduce){body::before{animation:none}.card{transition:none}}
+nav,#work,.stats div,.card,.pend,ul.files li,.drop,.bar2 input,.chip,.opt input,.opt select,textarea{background:var(--glass);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);border:1px solid var(--edge2);box-shadow:inset 0 1.5px 0 var(--edge),inset 0 -1px 0 var(--edge2),0 10px 30px var(--shadow)}
+@supports not (backdrop-filter:blur(1px)){nav,#work,.stats div,.card,.pend,ul.files li,.drop{background:var(--base)}}
+.app{display:grid;grid-template-columns:270px 1fr;gap:16px;padding:16px;min-height:100vh}
+nav{position:sticky;top:16px;height:calc(100vh - 32px);overflow:auto;padding:22px 14px;border-radius:28px}
+nav{scrollbar-width:none;-ms-overflow-style:none}
+nav::-webkit-scrollbar{display:none}
+nav h1{font-size:21px;font-weight:700;letter-spacing:-.02em;margin:0 10px 2px}
+nav p{margin:0 10px 18px;color:var(--mute);font-size:13px}
+nav button{display:block;width:100%;text-align:left;border:0;background:none;color:var(--txt);padding:10px 14px;border-radius:16px;font:inherit;cursor:pointer;transition:background .15s}
+nav button:hover{background:var(--glass2)}
+nav button[aria-current=true]{background:color-mix(in srgb,var(--acc) 24%,transparent);font-weight:600;box-shadow:inset 0 1px 0 var(--edge),inset 0 0 0 1px var(--edge2)}
+nav small{display:block;font-weight:400;color:var(--mute);font-size:12.5px}
+main{padding:8px;max-width:980px;width:100%}
+h2{font-size:30px;font-weight:700;letter-spacing:-.025em;line-height:1.15;margin:4px 0 6px}
+.desc{color:var(--mute);margin:0 0 22px}
+#work{padding:28px;border-radius:28px}
+.drop{border:1.5px dashed var(--edge);border-radius:22px;background:var(--glass2);padding:46px 20px;text-align:center;cursor:pointer;transition:transform .15s}
+.drop.over,.drop:hover{border-color:var(--acc);transform:scale(1.01)}
+.drop b{color:var(--acc)}
+ul.files{list-style:none;padding:0;margin:16px 0}
+ul.files li{display:flex;gap:8px;align-items:center;border-radius:16px;padding:9px 14px;margin-bottom:8px;box-shadow:inset 0 1px 0 var(--edge)}
+ul.files span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ul.files button{border:0;background:none;color:var(--mute);cursor:pointer;font-size:16px;padding:2px 6px}
+ul.files small{color:var(--mute);white-space:nowrap}
+.opt{margin:16px 0;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.opt input,.opt select,.bar2 input{font:inherit;color:var(--txt);background:var(--field);padding:9px 16px;border-radius:999px;box-shadow:inset 0 1px 2px var(--shadow)}
+.go{background:linear-gradient(180deg,color-mix(in srgb,var(--acc) 80%,#fff),var(--acc));color:var(--acc-ink);border:0;border-radius:999px;padding:12px 30px;font:inherit;font-weight:600;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 8px 20px color-mix(in srgb,var(--acc) 40%,transparent)}
+.go:disabled{opacity:.45;cursor:default}
+.bar{height:8px;background:var(--glass2);border-radius:4px;margin-top:18px;overflow:hidden;display:none;box-shadow:inset 0 1px 2px var(--shadow)}
+.bar i{display:block;height:100%;width:0;background:var(--acc);border-radius:4px;transition:width .2s}
+#msg{margin-top:12px;min-height:24px}
+#msg.ok{color:var(--ok)}#msg.err{color:var(--err)}
+textarea{width:100%;height:220px;margin-top:12px;padding:14px;font:14px/1.5 ui-monospace,monospace;color:var(--txt);border-radius:18px;display:none}
+.note{font-size:13px;color:var(--mute);margin:24px 0 0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 18px}
+.stats div{border-radius:20px;padding:14px 18px;color:var(--mute);font-size:13px}
+.stats b{display:block;font-size:28px;font-weight:700;letter-spacing:-.02em;color:var(--txt)}
+.bar2{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.bar2 input{flex:1;min-width:190px}
+.chip{color:var(--txt);border-radius:999px;padding:6px 15px;font:inherit;font-size:14px;cursor:pointer;margin-right:6px}
+.chip[aria-pressed=true]{background:color-mix(in srgb,var(--acc) 30%,transparent);border-color:var(--acc);font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.card{position:relative;overflow:hidden;border-radius:24px;padding:18px;cursor:pointer;transition:transform .2s,box-shadow .2s}
+.card::before{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(200px circle at var(--mx,30%) var(--my,0%),rgba(255,255,255,.4),transparent 60%);opacity:.45;pointer-events:none;transition:opacity .2s}
+.card:hover{transform:translateY(-3px)}
+.card:hover::before{opacity:1}
+.ic{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;margin-bottom:14px;color:var(--acc);background:color-mix(in srgb,var(--acc) 16%,transparent);box-shadow:inset 0 1px 0 var(--edge)}
+.card h3{margin:0 0 2px;font-size:16px;font-weight:600;padding-right:26px}
+.card p{margin:0 0 10px;color:var(--mute);font-size:14px}
+.card small{color:var(--mute);font-size:12.5px}
+.card.fit{border-color:var(--ok);box-shadow:inset 0 1.5px 0 var(--edge),0 0 0 2px var(--ok),0 10px 30px var(--shadow)}
+.card.dim{opacity:.4}
+.star{position:absolute;top:12px;right:12px;border:0;background:none;color:var(--acc);font-size:20px;cursor:pointer;z-index:1}
+.pend{border-radius:18px;border-color:var(--ok);padding:11px 16px;margin-bottom:16px;font-size:14px}
+.rh{margin:30px 0 10px;font-size:18px;font-weight:600}
+.lnk{border:0;background:none;color:var(--acc);cursor:pointer;font:inherit;padding:0}
+body{font-family:var(--font);-webkit-font-smoothing:antialiased}
+nav h1,h2,.rh,.card h3,.stats b,.go,.chip{font-family:var(--font-d)}
+h2{font-size:34px;font-weight:700;letter-spacing:-.022em}
+nav h1{font-size:22px;letter-spacing:-.02em}
+nav button{transition:background .3s var(--ease),transform .25s var(--ease)}
+nav button:active,.chip:active,.go:active,.card:active{transform:scale(.97)}
+nav button[aria-current=true]{background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--txt)}
+.chip{transition:background .3s var(--ease),color .3s var(--ease),transform .25s var(--ease)}
+.chip[aria-pressed=true]{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+.go{background:var(--acc);color:var(--acc-ink);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 6px 18px var(--shadow);transition:transform .3s var(--spring),opacity .3s}
+.go:hover:not(:disabled){transform:translateY(-2px)}
+.ic{background:color-mix(in srgb,var(--acc) 8%,transparent);color:var(--txt)}
+.card{transition:transform .5s var(--spring),box-shadow .4s var(--ease),opacity .3s}
+.card:hover{transform:translateY(-4px) scale(1.012)}
+.card.fit{border-color:var(--acc);box-shadow:inset 0 1.5px 0 var(--edge),0 0 0 2px var(--acc),0 10px 30px var(--shadow)}
+.card.dim{opacity:.35}
+.pend{border-color:var(--acc)}
+.drop{transition:transform .5s var(--spring),border-color .3s,background .3s}
+.drop b{color:var(--txt);text-decoration:underline;text-underline-offset:3px}
+.star{color:var(--txt);transition:transform .35s var(--spring)}
+.star:hover{transform:scale(1.25)}
+.bar i{transition:width .4s var(--ease)}
+#msg{transition:color .3s}
+#msg.ok{color:var(--txt)}
+ul.files li{animation:rise .4s var(--ease) both}
+#dash:not([hidden]),#work:not([hidden]){animation:enter .55s var(--ease) both}
+@keyframes enter{from{opacity:0;transform:translateY(12px) scale(.992)}}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}}
+@media (prefers-reduced-motion:reduce){*,*::before{animation:none!important;transition:none!important}}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+@media(max-width:760px){.app{grid-template-columns:1fr;padding:10px}nav{position:static;height:auto}#work{padding:20px}.stats b{font-size:21px}.stats div{padding:12px}}
+.app{grid-template-columns:270px minmax(0,1fr)}
+main{min-width:0}
+.stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+.bar2>div{display:flex;flex-wrap:wrap;gap:6px}
+.chip{margin-right:0}
+@media(max-height:720px){nav small{display:none}nav button{padding:8px 14px}nav p{margin-bottom:10px}}
+@media(max-height:520px){nav{position:static;height:auto}}
+@media(max-width:760px){
+.app{grid-template-columns:minmax(0,1fr)}
+nav{display:flex;align-items:center;gap:8px;overflow-x:auto;padding:10px 12px;border-radius:22px}
+nav h1{margin:0 8px 0 4px;white-space:nowrap;font-size:18px}
+nav p,nav small{display:none}
+#menu{display:flex;gap:4px}
+nav button{width:auto;white-space:nowrap;padding:8px 14px;border-radius:999px}
+h2{font-size:28px}
+.stats{grid-template-columns:1fr 1fr}
+.stats div:last-child{grid-column:1/-1}
+.grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<nav><h1>converter.io</h1><p>Free. No ads. Files never leave your browser.</p><button id="homeBtn" data-id="home">Dashboard<small>Pinned tools and recent work</small></button><div id="menu"></div></nav>
+<main>
+<section id="dash"></section>
+<section id="work" hidden>
+<h2 id="title"></h2><p class="desc" id="desc"></p>
+<div class="drop" id="drop" tabindex="0" role="button"><b>Choose files</b> or drop them here<input type="file" id="pick" hidden></div>
+<ul class="files" id="list"></ul>
+<div class="opt" id="opts"></div>
+<button class="go" id="go">Convert</button>
+<div class="bar" id="bar"><i></i></div>
+<div id="msg" role="status"></div>
+<textarea id="out" readonly></textarea>
+<p class="note">Everything runs on your own device. Scanned-PDF OCR downloads a language file the first time (about 10 MB).</p>
+</section>
+</main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.5/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+const $=id=>document.getElementById(id);
+const {PDFDocument,degrees}=PDFLib;
+let files=[],tool=null;
+class UErr extends Error{}
+const friendly=e=>{const m=String(e&&e.message||e);
+  if(e instanceof UErr)return m;
+  if(/encrypt|password/i.test(m))return "This PDF is password-protected. Remove the password first, then try again.";
+  if(/No PDF header|Failed to parse|Invalid PDF|InvalidPDF|corrupt|end of file/i.test(m))return "This file looks damaged, or it isn't a real PDF.";
+  return "Something went wrong with this file. Check that it is valid and not password-protected."};
+
+let lastOut=0;const dl=(data,name,type)=>{const b=data instanceof Blob?data:new Blob([data],{type});lastOut=b.size;const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000)};
+const buf=f=>f.arrayBuffer();
+const base=f=>f.name.replace(/\.[^.]+$/,"");
+const prog=p=>{$("bar").style.display="block";$("bar").firstElementChild.style.width=(p*100)+"%"};
+const say=(t,c="")=>{$("msg").textContent=t;$("msg").className=c};
+const isPdf=f=>f.type==="application/pdf"||/\.pdf$/i.test(f.name);
+
+async function renderPages(file,scale,cb){
+  const pdf=await pdfjsLib.getDocument({data:await buf(file)}).promise;
+  for(let i=1;i<=pdf.numPages;i++){
+    const page=await pdf.getPage(i),vp=page.getViewport({scale});
+    const c=document.createElement("canvas");c.width=vp.width;c.height=vp.height;
+    await page.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;
+    await cb(c,i,pdf.numPages,page.getViewport({scale:1}));
+    prog(i/pdf.numPages);
+  }
+}
+const toBlob=(c,type,q)=>new Promise(r=>c.toBlob(r,type,q));
+
+function ranges(txt,n){
+  const out=[];
+  txt.split(",").forEach(p=>{p=p.trim();if(!p)return;
+    const [a,b]=p.split("-").map(Number),s=a,e=b||a;
+    if(!(s>=1&&e<=n&&s<=e))throw new UErr(`Page range "${p}" is outside 1-${n}.`);
+    for(let i=s;i<=e;i++)out.push(i-1)});
+  if(!out.length)throw new UErr("Enter pages like 1-3,5.");
+  return out;
+}
+
+const TOOLS=[
+{id:"merge",name:"Merge PDFs",sub:"Combine files in order",desc:"Add two or more PDFs. They are joined in the order listed.",accept:".pdf",multi:true,min:2,
+ async run(){
+  if(files.length<2)throw new UErr("Add at least two PDFs.");
+  const out=await PDFDocument.create();
+  for(const f of files){const d=await PDFDocument.load(await buf(f));(await out.copyPages(d,d.getPageIndices())).forEach(p=>out.addPage(p))}
+  dl(new Blob([await out.save()],{type:"application/pdf"}),"merged.pdf");return "Merged PDF downloaded."}},
+{id:"split",name:"Split / extract pages",sub:"Keep only the pages you pick",desc:"Choose the pages to keep, for example 1-3,5.",accept:".pdf",opts:[{k:"range",type:"text",ph:"1-3,5",label:"Pages"}],
+ async run(o){
+  const d=await PDFDocument.load(await buf(files[0])),idx=ranges(o.range,d.getPageCount());
+  const out=await PDFDocument.create();(await out.copyPages(d,idx)).forEach(p=>out.addPage(p));
+  dl(new Blob([await out.save()],{type:"application/pdf"}),base(files[0])+"-pages.pdf");return `Extracted ${idx.length} page(s).`}},
+{id:"rotate",name:"Rotate PDF",sub:"Turn every page",desc:"Rotate all pages of a PDF.",accept:".pdf",opts:[{k:"deg",type:"select",label:"Rotate",choices:[["90","90° clockwise"],["180","180°"],["270","90° counter-clockwise"]]}],
+ async run(o){
+  const d=await PDFDocument.load(await buf(files[0]));
+  d.getPages().forEach(p=>p.setRotation(degrees((p.getRotation().angle+Number(o.deg))%360)));
+  dl(new Blob([await d.save()],{type:"application/pdf"}),base(files[0])+"-rotated.pdf");return "Rotated PDF downloaded."}},
+{id:"img2pdf",name:"Images to PDF",sub:"JPG, PNG, WebP",desc:"Turn photos or scans into one PDF, one image per page. Phone photos keep their correct rotation.",accept:"image/*",multi:true,opts:[
+ {k:"size",type:"select",label:"Page",choices:[["fit","Same size as image"],["a4","A4"],["letter","US Letter"]]},
+ {k:"margin",type:"select",label:"Margin",choices:[["0","None"],["24","Small"],["48","Medium"]],def:1},
+ {k:"qual",type:"select",label:"Quality",choices:[["orig","Original"],["1800|0.82","Reduce file size"]]}],
+ async run(o){
+  const out=await PDFDocument.create(),m=Number(o.margin),[maxS,jq]=o.qual==="orig"?[0,.95]:o.qual.split("|").map(Number);
+  for(let i=0;i<files.length;i++){
+   const f=files[i],png=/png/i.test(f.type),bm=await createImageBitmap(f,{imageOrientation:"from-image"});
+   let w=bm.width,h=bm.height;
+   if(maxS&&Math.max(w,h)>maxS){const k=maxS/Math.max(w,h);w=Math.round(w*k);h=Math.round(h*k)}
+   const c=document.createElement("canvas");c.width=w;c.height=h;const x=c.getContext("2d");
+   if(!png){x.fillStyle="#fff";x.fillRect(0,0,w,h)}
+   x.drawImage(bm,0,0,w,h);
+   const img=png?await out.embedPng(await (await toBlob(c,"image/png")).arrayBuffer()):await out.embedJpg(await (await toBlob(c,"image/jpeg",jq)).arrayBuffer());
+   let pw,ph,dw,dh;
+   if(o.size==="fit"){dw=w;dh=h;pw=w+2*m;ph=h+2*m}
+   else{[pw,ph]=o.size==="a4"?[595.28,841.89]:[612,792];if(w>h)[pw,ph]=[ph,pw];const k=Math.min((pw-2*m)/w,(ph-2*m)/h);dw=w*k;dh=h*k}
+   out.addPage([pw,ph]).drawImage(img,{x:(pw-dw)/2,y:(ph-dh)/2,width:dw,height:dh});
+   prog((i+1)/files.length)}
+  dl(new Blob([await out.save()],{type:"application/pdf"}),files.length===1?base(files[0])+".pdf":"images.pdf");
+  return `PDF with ${files.length} page(s) downloaded.`}},
+{id:"pdf2img",name:"PDF to images",sub:"One PNG per page, zipped",desc:"Save every page of a PDF as a PNG image.",accept:".pdf",
+ async run(){
+  const zip=new JSZip();
+  await renderPages(files[0],2,async(c,i)=>zip.file(`page-${i}.png`,await toBlob(c,"image/png")));
+  dl(await zip.generateAsync({type:"blob"}),base(files[0])+"-images.zip");return "ZIP downloaded."}},
+{id:"compress",name:"Compress PDF",sub:"Smaller file, you choose how",desc:"Lossless tidies the file and keeps text selectable. The other two rebuild pages as images for a bigger size cut, so text can no longer be selected. You only get a download if the result is smaller.",accept:".pdf",opts:[{k:"q",type:"select",label:"Mode",choices:[["lossless","Lossless (keeps text)"],["0.7|1.5","Balanced (flattens pages)"],["0.5|1.2","Smallest (flattens pages)"]]}],
+ async run(o){
+  const f=files[0];let bytes;
+  if(o.q==="lossless"){const d=await PDFDocument.load(await buf(f),{updateMetadata:false});bytes=await d.save({useObjectStreams:true})}
+  else{
+   const [q,sc]=o.q.split("|").map(Number),out=await PDFDocument.create();
+   await renderPages(f,sc,async(c,i,n,vp)=>{
+    const img=await out.embedJpg(await (await toBlob(c,"image/jpeg",q)).arrayBuffer());
+    out.addPage([vp.width,vp.height]).drawImage(img,{x:0,y:0,width:vp.width,height:vp.height})});
+   bytes=await out.save()}
+  if(bytes.length>=f.size)throw new UErr(`This PDF can't get smaller this way (${fmt(f.size)} → ${fmt(bytes.length)}), so nothing was downloaded. Try another mode or keep the original.`);
+  dl(new Blob([bytes],{type:"application/pdf"}),base(f)+"-small.pdf");
+  return `Done. ${fmt(f.size)} → ${fmt(bytes.length)} (${Math.round(100-bytes.length/f.size*100)}% smaller).`}},
+{id:"ocr",name:"OCR (scan to text)",sub:"Images or scanned PDFs",desc:"Read the text from scans and photos. Results appear below and download as a .txt file.",accept:".pdf,image/*",opts:[{k:"lang",type:"select",label:"Language",choices:[["eng","English"],["sin","Sinhala"],["tam","Tamil"],["eng+sin","English + Sinhala"]]}],
+ async run(o){
+  const worker=await Tesseract.createWorker(o.lang,1,{logger:m=>{if(m.status==="recognizing text")say(`Reading text… ${Math.round(m.progress*100)}%`)}});
+  let text="";
+  try{
+    if(isPdf(files[0]))await renderPages(files[0],2,async(c,i,n)=>{text+=`--- Page ${i} ---\n`+(await worker.recognize(c)).data.text+"\n"});
+    else text=(await worker.recognize(files[0])).data.text;
+  }finally{await worker.terminate()}
+  $("out").style.display="block";$("out").value=text;
+  dl(text,base(files[0])+".txt","text/plain");return "Text extracted and downloaded."}},
+{id:"word",name:"Word to PDF",sub:".docx files",desc:"Converts your Word file to a PDF right here, with no print window. Headings, lists, tables and pictures carry over; columns, headers and footers are simplified. Pages are saved as images, so text can't be selected.",accept:".docx",
+ async run(){
+  const r=await mammoth.convertToHtml({arrayBuffer:await buf(files[0])});
+  if(!r.value.trim())throw new UErr("No readable content was found in this Word file.");
+  const W=794,PH=1011,S=2,box=document.createElement("div");
+  box.style.cssText=`position:absolute;left:-10000px;top:0;width:${W}px;padding:0 64px;box-sizing:border-box;background:#fff;color:#000;font:12pt/1.5 Georgia,"Times New Roman","Iskoola Pota","Nirmala UI",serif;overflow-wrap:anywhere`;
+  box.innerHTML=`<style>h1,h2,h3,h4{font-family:Arial,sans-serif;margin:.8em 0 .3em;line-height:1.25}p{margin:0 0 .7em}ul,ol{margin:0 0 .7em}table{border-collapse:collapse;width:100%;margin:0 0 .7em}td,th{border:1px solid #888;padding:4px 8px;vertical-align:top}img{max-width:100%}</style>`+r.value;
+  document.body.appendChild(box);
+  try{
+   if(document.fonts&&document.fonts.ready)await document.fonts.ready;
+   const top=box.getBoundingClientRect().top,H=Math.ceil(box.scrollHeight),k=595.28/W;
+   const edges=[...box.querySelectorAll(":scope > *:not(style):not(table), tr")].map(e=>e.getBoundingClientRect().bottom-top);
+   const out=await PDFDocument.create();let y=0,n=0;
+   while(y<H-1){
+    let end=Math.min(y+PH,H);
+    if(end<H){const fit=edges.filter(b=>b<=end+.5&&b>y+24);if(fit.length)end=Math.max(...fit)}
+    n++;say(`Building page ${n}…`);prog(Math.min(.95,end/H));
+    const c=await html2canvas(box,{scale:S,backgroundColor:"#fff",y,height:end-y,windowWidth:W,onclone:(d,el)=>{el.style.left="0px";el.style.top="0px"}});
+    const img=await out.embedJpg(await (await toBlob(c,"image/jpeg",.9)).arrayBuffer()),hp=(end-y)*k;
+    out.addPage([595.28,841.89]).drawImage(img,{x:0,y:841.89-42-hp,width:595.28,height:hp});
+    y=end}
+   dl(new Blob([await out.save()],{type:"application/pdf"}),base(files[0])+".pdf");
+   return `PDF with ${n} page(s) downloaded.`;
+  }finally{box.remove()}}},
+];
+
+function show(id){
+  tool=TOOLS.find(t=>t.id===id);files=[];$("dash").hidden=true;$("work").hidden=false;
+  $("title").textContent=tool.name;$("desc").textContent=tool.desc;
+  $("pick").accept=tool.accept;$("pick").multiple=!!tool.multi;
+  $("opts").innerHTML="";
+  (tool.opts||[]).forEach(o=>{
+    const l=document.createElement("label");l.textContent=o.label+" ";
+    const e=document.createElement(o.type==="select"?"select":"input");e.id="o_"+o.k;
+    if(o.type==="select"){o.choices.forEach(([v,t])=>e.add(new Option(t,v)));if(o.def)e.selectedIndex=o.def}else e.placeholder=o.ph;
+    l.appendChild(e);$("opts").appendChild(l)});
+  $("out").style.display="none";$("bar").style.display="none";say("");
+  document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-current",b.dataset.id===id));
+  renderList();
+}
+function renderList(){
+  $("list").innerHTML="";
+  files.forEach((f,i)=>{const li=document.createElement("li");
+    li.innerHTML=`<span></span><button title="Move up">↑</button><button title="Remove">✕</button>`;
+    li.firstChild.textContent=f.name;li.children[1].setAttribute("aria-label","Move "+f.name+" up");li.children[2].setAttribute("aria-label","Remove "+f.name);
+    li.children[1].onclick=()=>{if(i>0){[files[i-1],files[i]]=[files[i],files[i-1]];renderList()}};
+    li.children[2].onclick=()=>{files.splice(i,1);renderList()};
+    $("list").appendChild(li)});
+  const need=tool.min||1;$("go").disabled=files.length<need;
+  say(files.length<need?(files.length?`Add ${need-files.length} more file to continue.`:"Add a file to begin."):"");
+}
+function addFiles(fl){
+  fl=[...fl];const bad=fl.filter(f=>!fits(tool,f));fl=fl.filter(f=>fits(tool,f));
+  if(!tool.multi)fl=fl.slice(0,1);
+  files=tool.multi?files.concat(fl):(fl.length?fl:files);renderList();
+  if(bad.length)say(`Skipped ${bad.map(f=>f.name).join(", ")}. This tool accepts ${tool.accept.replace(/,/g,", ")} only.`,"err");
+  else if(files.reduce((a,f)=>a+f.size,0)>80*1048576)say("These files are large, so this may be slow on older devices.");
+}
+const menu=$("menu");
+TOOLS.forEach(t=>{const b=document.createElement("button");b.dataset.id=t.id;b.innerHTML=`${t.name}<small>${t.sub}</small>`;b.onclick=()=>show(t.id);menu.appendChild(b)});
+$("drop").onclick=()=>$("pick").click();
+$("drop").onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();$("pick").click()}};
+$("pick").onchange=e=>{addFiles(e.target.files);e.target.value=""};
+$("drop").ondragover=e=>{e.preventDefault();$("drop").classList.add("over")};
+$("drop").ondragleave=()=>$("drop").classList.remove("over");
+$("drop").ondrop=e=>{e.preventDefault();$("drop").classList.remove("over");addFiles(e.dataTransfer.files)};
+$("go").onclick=async()=>{
+  const o={};(tool.opts||[]).forEach(x=>o[x.k]=$("o_"+x.k).value);
+  $("go").disabled=true;say("Working…");prog(0);
+  try{lastOut=0;const m=await tool.run(o);say(m,"ok");rec(tool,files,lastOut)}
+  catch(e){if(!(e instanceof UErr))console.error(e);say(friendly(e),"err")}
+  $("go").disabled=files.length<(tool.min||1);
+};
+
+/* ---------- Dashboard ---------- */
+const svg=d=>`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
+const FILE="M6 3h9l4 4v14H6zM14 3v5h5";
+const ICON={merge:svg("M8 4h9a2 2 0 0 1 2 2v9M5 8h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2z"),split:svg("M12 3v18M6 8l-4 4 4 4M18 8l4 4-4 4"),rotate:svg("M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"),compress:svg("M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"),img2pdf:svg("M4 5h16v14H4zM4 16l5-5 4 4 3-3 4 4M9 9h.01"),pdf2img:svg(FILE+"M9 17l2-3 2 2 2-2"),ocr:svg("M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4M8 12h8"),word:svg(FILE+"M9 13h6M9 17h6")};
+const CAT={merge:"PDF",split:"PDF",rotate:"PDF",compress:"PDF",img2pdf:"Images",pdf2img:"Images",ocr:"Text & Word",word:"Text & Word"};
+let S={hist:[],fav:[],tot:{runs:0,files:0,saved:0}},pending=[],catF="All",q="";
+try{S=Object.assign(S,JSON.parse(localStorage.getItem("oc")||"{}"))}catch(e){}
+const save=()=>{try{localStorage.setItem("oc",JSON.stringify(S))}catch(e){}};
+const esc=x=>String(x).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=b=>b>1048576?(b/1048576).toFixed(1)+" MB":Math.round(b/1024)+" KB";
+const ago=t=>{const m=Math.round((Date.now()-t)/60000);return m<1?"just now":m<60?m+" min ago":m<1440?Math.round(m/60)+" h ago":Math.round(m/1440)+" d ago"};
+const fits=(t,f)=>t.accept.split(",").some(a=>a.endsWith("/*")?f.type.startsWith(a.slice(0,-1)):f.name.toLowerCase().endsWith(a));
+function rec(t,fl,out){
+  const inB=fl.reduce((a,f)=>a+f.size,0);
+  S.tot.runs++;S.tot.files+=fl.length;
+  if(t.id==="compress"&&out&&out<inB)S.tot.saved+=inB-out;
+  S.hist.unshift({id:t.id,names:fl.map(f=>f.name),inB,out:t.id==="compress"?out:0,t:Date.now()});
+  S.hist=S.hist.slice(0,8);save();
+}
+function home(){
+  tool=null;files=[];$("work").hidden=true;$("dash").hidden=false;
+  document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-current",b.dataset.id==="home"));
+  renderDash();
+}
+function renderDash(){
+  const cats=["All",...new Set(Object.values(CAT))],fit=t=>pending.every(f=>fits(t,f));
+  const list=TOOLS.filter(t=>(catF==="All"||CAT[t.id]===catF)&&(t.name+" "+t.sub).toLowerCase().includes(q.toLowerCase()))
+    .sort((a,b)=>S.fav.includes(b.id)-S.fav.includes(a.id));
+  $("dash").innerHTML=`<h2>Tools</h2>
+<p class="desc">Drop a file anywhere on this page to see which tools can open it.</p>
+<div class="stats"><div><b>${S.tot.runs}</b>conversions</div><div><b>${S.tot.files}</b>files processed</div><div><b>${fmt(S.tot.saved)}</b>saved by compressing</div></div>
+<div class="bar2"><input id="q" type="search" placeholder="Search tools (press /)" value="${esc(q)}"><div>${cats.map(c=>`<button class="chip" data-c="${esc(c)}" aria-pressed="${c===catF}">${esc(c)}</button>`).join("")}</div></div>
+${pending.length?`<div class="pend">${pending.length} file(s) ready: ${esc(pending.map(f=>f.name).join(", "))}. Pick a tool. <button class="lnk" id="clr">Clear</button></div>`:""}
+<div class="grid">${list.map(t=>`<div class="card${pending.length?(fit(t)?" fit":" dim"):""}" data-t="${t.id}" tabindex="0" role="button"><button class="star" data-s="${t.id}" aria-label="Pin ${esc(t.name)}" aria-pressed="${S.fav.includes(t.id)}">${S.fav.includes(t.id)?"★":"☆"}</button><i class="ic">${ICON[t.id]}</i><h3>${esc(t.name)}</h3><p>${esc(t.sub)}</p><small>${CAT[t.id]}</small></div>`).join("")||"<p>No tool matches that search.</p>"}</div>
+<h3 class="rh">Recent activity</h3>
+${S.hist.length?`<ul class="files">${S.hist.map(h=>`<li><span>${esc(TOOLS.find(t=>t.id===h.id).name)}: ${esc(h.names.join(", "))}</span><small>${h.out?fmt(h.inB)+" → "+fmt(h.out)+" · ":""}${ago(h.t)}</small></li>`).join("")}</ul><button class="lnk" id="clh">Clear history</button>`:`<p class="desc">Nothing yet. Finished conversions will be listed here. History and pins are stored only in this browser.</p>`}`;
+}
+function launch(id){
+  const p=pending;pending=[];show(id);
+  const ok=p.filter(f=>fits(tool,f));if(ok.length)addFiles(ok);
+}
+$("homeBtn").onclick=home;
+$("dash").onclick=e=>{
+  const s=e.target.closest("[data-s]");
+  if(s){const id=s.dataset.s;S.fav=S.fav.includes(id)?S.fav.filter(x=>x!==id):[...S.fav,id];save();return renderDash()}
+  const c=e.target.closest("[data-c]");if(c){catF=c.dataset.c;return renderDash()}
+  if(e.target.closest("#clr")){pending=[];return renderDash()}
+  if(e.target.closest("#clh")){S.hist=[];save();return renderDash()}
+  const k=e.target.closest("[data-t]");if(k)launch(k.dataset.t);
+};
+$("dash").onpointermove=e=>{const c=e.target.closest(".card");if(c){const r=c.getBoundingClientRect();c.style.setProperty("--mx",e.clientX-r.left+"px");c.style.setProperty("--my",e.clientY-r.top+"px")}};
+$("dash").onkeydown=e=>{if(e.key==="Enter"&&e.target.dataset.t)launch(e.target.dataset.t)};
+$("dash").oninput=e=>{if(e.target.id==="q"){q=e.target.value;renderDash();const i=$("q");i.focus();i.setSelectionRange(q.length,q.length)}};
+addEventListener("dragover",e=>{if(!$("dash").hidden)e.preventDefault()});
+addEventListener("drop",e=>{if(!$("dash").hidden){e.preventDefault();pending=[...e.dataTransfer.files];renderDash()}});
+addEventListener("keydown",e=>{if(e.key==="/"&&!$("dash").hidden&&document.activeElement.tagName!=="INPUT"){e.preventDefault();$("q").focus()}});
+home();
+</script>
+</body>
+</html>

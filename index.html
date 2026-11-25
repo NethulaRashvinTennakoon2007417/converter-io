@@ -25,7 +25,7 @@ nav h1{font-size:21px;font-weight:700;letter-spacing:-.02em;margin:0 10px 2px}
 nav p{margin:0 10px 18px;color:var(--mute);font-size:13px}
 nav button{display:block;width:100%;text-align:left;border:0;background:none;color:var(--txt);padding:10px 14px;border-radius:16px;font:inherit;cursor:pointer;transition:background .15s}
 nav button:hover{background:var(--glass2)}
-nav button[aria-current=true]{background:color-mix(in srgb,var(--acc) 24%,transparent);font-weight:600;box-shadow:inset 0 1px 0 var(--edge),inset 0 0 0 1px var(--edge2)}
+nav button[aria-current=page]{background:color-mix(in srgb,var(--acc) 24%,transparent);font-weight:600;box-shadow:inset 0 1px 0 var(--edge),inset 0 0 0 1px var(--edge2)}
 nav small{display:block;font-weight:400;color:var(--mute);font-size:12.5px}
 main{padding:8px;max-width:980px;width:100%}
 h2{font-size:30px;font-weight:700;letter-spacing:-.025em;line-height:1.15;margin:4px 0 6px}
@@ -77,7 +77,7 @@ h2{font-size:34px;font-weight:700;letter-spacing:-.022em}
 nav h1{font-size:22px;letter-spacing:-.02em}
 nav button{transition:background .3s var(--ease),transform .25s var(--ease)}
 nav button:active,.chip:active,.go:active,.card:active{transform:scale(.97)}
-nav button[aria-current=true]{background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--txt)}
+nav button[aria-current=page]{background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--txt)}
 .chip{transition:background .3s var(--ease),color .3s var(--ease),transform .25s var(--ease)}
 .chip[aria-pressed=true]{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
 .go{background:var(--acc);color:var(--acc-ink);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 6px 18px var(--shadow);transition:transform .3s var(--spring),opacity .3s}
@@ -146,18 +146,18 @@ h2{font-size:28px}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.5/tesseract.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"></script>
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 const $=id=>document.getElementById(id);
 const {PDFDocument,degrees}=PDFLib;
 let files=[],tool=null;
+const setNav=id=>document.querySelectorAll("nav button").forEach(b=>b.dataset.id===id?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current"));
 class UErr extends Error{}
 const friendly=e=>{const m=String(e&&e.message||e);
   if(e instanceof UErr)return m;
   if(/encrypt|password/i.test(m))return "This PDF is password-protected. Remove the password first, then try again.";
-  if(/No PDF header|Failed to parse|Invalid PDF|InvalidPDF|corrupt|end of file/i.test(m))return "This file looks damaged, or it isn't a real PDF.";
+  if(/No PDF header|Failed to parse|Invalid PDF|InvalidPDF|corrupt|end of file|central directory|zip file/i.test(m))return "This file looks damaged, or it isn't the kind of file this tool expects.";
   return "Something went wrong with this file. Check that it is valid and not password-protected."};
 
 let lastOut=0;const dl=(data,name,type)=>{const b=data instanceof Blob?data:new Blob([data],{type});lastOut=b.size;const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000)};
@@ -255,30 +255,12 @@ const TOOLS=[
   }finally{await worker.terminate()}
   $("out").style.display="block";$("out").value=text;
   dl(text,base(files[0])+".txt","text/plain");return "Text extracted and downloaded."}},
-{id:"word",name:"Word to PDF",sub:".docx files",desc:"Converts your Word file to a PDF right here, with no print window. Headings, lists, tables and pictures carry over; columns, headers and footers are simplified. Pages are saved as images, so text can't be selected.",accept:".docx",
+{id:"word",name:"Word to PDF",sub:".docx files",desc:"Converts your Word file to a real PDF on this device: selectable, searchable text, headers and footers, numbering and page breaks as in Word. Tables are supported; text boxes, footnotes and Sinhala/Tamil text are not yet.",accept:".docx",
  async run(){
-  const r=await mammoth.convertToHtml({arrayBuffer:await buf(files[0])});
-  if(!r.value.trim())throw new UErr("No readable content was found in this Word file.");
-  const W=794,PH=1011,S=2,box=document.createElement("div");
-  box.style.cssText=`position:absolute;left:-10000px;top:0;width:${W}px;padding:0 64px;box-sizing:border-box;background:#fff;color:#000;font:12pt/1.5 Georgia,"Times New Roman","Iskoola Pota","Nirmala UI",serif;overflow-wrap:anywhere`;
-  box.innerHTML=`<style>h1,h2,h3,h4{font-family:Arial,sans-serif;margin:.8em 0 .3em;line-height:1.25}p{margin:0 0 .7em}ul,ol{margin:0 0 .7em}table{border-collapse:collapse;width:100%;margin:0 0 .7em}td,th{border:1px solid #888;padding:4px 8px;vertical-align:top}img{max-width:100%}</style>`+r.value;
-  document.body.appendChild(box);
-  try{
-   if(document.fonts&&document.fonts.ready)await document.fonts.ready;
-   const top=box.getBoundingClientRect().top,H=Math.ceil(box.scrollHeight),k=595.28/W;
-   const edges=[...box.querySelectorAll(":scope > *:not(style):not(table), tr")].map(e=>e.getBoundingClientRect().bottom-top);
-   const out=await PDFDocument.create();let y=0,n=0;
-   while(y<H-1){
-    let end=Math.min(y+PH,H);
-    if(end<H){const fit=edges.filter(b=>b<=end+.5&&b>y+24);if(fit.length)end=Math.max(...fit)}
-    n++;say(`Building page ${n}…`);prog(Math.min(.95,end/H));
-    const c=await html2canvas(box,{scale:S,backgroundColor:"#fff",y,height:end-y,windowWidth:W,onclone:(d,el)=>{el.style.left="0px";el.style.top="0px"}});
-    const img=await out.embedJpg(await (await toBlob(c,"image/jpeg",.9)).arrayBuffer()),hp=(end-y)*k;
-    out.addPage([595.28,841.89]).drawImage(img,{x:0,y:841.89-42-hp,width:595.28,height:hp});
-    y=end}
-   dl(new Blob([await out.save()],{type:"application/pdf"}),base(files[0])+".pdf");
-   return `PDF with ${n} page(s) downloaded.`;
-  }finally{box.remove()}}},
+  const {docxToPdf}=await import("./docxToPdf.js");
+  const r=await docxToPdf(await buf(files[0]),{PDFLib,JSZip,fontkit,status:m=>say(m),loadFont:async n=>{const x=await fetch(`fonts/${n}.ttf`);if(!x.ok)throw new UErr("A font file could not be loaded. Check your connection and try again.");return x.arrayBuffer()}});
+  dl(new Blob([r.bytes],{type:"application/pdf"}),base(files[0])+".pdf");
+  return `PDF with ${r.pages} page(s) downloaded.`+(r.warnings.length?" Note: "+r.warnings.join(" "):"")}},
 ];
 
 function show(id){
@@ -292,7 +274,7 @@ function show(id){
     if(o.type==="select"){o.choices.forEach(([v,t])=>e.add(new Option(t,v)));if(o.def)e.selectedIndex=o.def}else e.placeholder=o.ph;
     l.appendChild(e);$("opts").appendChild(l)});
   $("out").style.display="none";$("bar").style.display="none";say("");
-  document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-current",b.dataset.id===id));
+  setNav(id);
   renderList();
 }
 function renderList(){
@@ -345,12 +327,12 @@ function rec(t,fl,out){
   const inB=fl.reduce((a,f)=>a+f.size,0);
   S.tot.runs++;S.tot.files+=fl.length;
   if(t.id==="compress"&&out&&out<inB)S.tot.saved+=inB-out;
-  S.hist.unshift({id:t.id,names:fl.map(f=>f.name),inB,out:t.id==="compress"?out:0,t:Date.now()});
+  S.hist.unshift({id:t.id,names:fl.map(f=>f.name),inB,out,t:Date.now()});
   S.hist=S.hist.slice(0,8);save();
 }
 function home(){
   tool=null;files=[];$("work").hidden=true;$("dash").hidden=false;
-  document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-current",b.dataset.id==="home"));
+  setNav("home");
   renderDash();
 }
 function renderDash(){
